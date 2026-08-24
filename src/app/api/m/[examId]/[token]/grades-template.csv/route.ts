@@ -6,9 +6,13 @@ import { SEAT_ORDER_ASC } from "@/lib/seatSort";
 
 export const dynamic = "force-dynamic";
 
-// Token-scoped grades template. Primary marker gets every seat; second
-// marker gets only the seats in their assigned sample. CIDs are never
-// included -- markers must not see them.
+// Token-scoped grades template. Primary marker gets every non-absent
+// seat and columns Seat number / Grade / Comments. Secondary marker
+// gets only the seats in their assigned sample and columns Seat
+// number / Primary Marker's grade / Secondary Marker grade /
+// Secondary Marker comments — the primary column is populated for
+// reference so the second marker can compare while filling in their
+// own grade. CIDs are never included on the marker template.
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ examId: string; token: string }> },
@@ -27,29 +31,41 @@ export async function GET(
   else if (token === exam.secondary_access_token) role = "secondary";
   else notFound();
 
-  const seats =
-    role === "secondary"
-      ? await query<{ seat_number: string }>(
-          `SELECT seat_number FROM submissions
-           WHERE exam_id = $1 AND in_sample = true AND absent = false
-           ORDER BY ${SEAT_ORDER_ASC}`,
-          [examId],
-        )
-      : await query<{ seat_number: string }>(
-          `SELECT seat_number FROM submissions
-           WHERE exam_id = $1 AND absent = false
-           ORDER BY ${SEAT_ORDER_ASC}`,
-          [examId],
-        );
-
-  const rows: string[][] = [
-    ["Seat number", "Grade", "Comments"],
-    ...seats.map((s) => [s.seat_number, "", ""]),
-  ];
-  const body = "﻿" + toCsv(rows) + "\n";
   const safe = (exam.code || exam.name || "grades")
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);
+
+  let rows: string[][];
+  if (role === "secondary") {
+    const seats = await query<{ seat_number: string; grade: string | null }>(
+      `SELECT seat_number, grade FROM submissions
+       WHERE exam_id = $1 AND in_sample = true AND absent = false
+       ORDER BY ${SEAT_ORDER_ASC}`,
+      [examId],
+    );
+    rows = [
+      [
+        "Seat number",
+        "Primary Marker's grade",
+        "Secondary Marker grade",
+        "Secondary Marker comments",
+      ],
+      ...seats.map((s) => [s.seat_number, s.grade ?? "", "", ""]),
+    ];
+  } else {
+    const seats = await query<{ seat_number: string }>(
+      `SELECT seat_number FROM submissions
+       WHERE exam_id = $1 AND absent = false
+       ORDER BY ${SEAT_ORDER_ASC}`,
+      [examId],
+    );
+    rows = [
+      ["Seat number", "Grade", "Comments"],
+      ...seats.map((s) => [s.seat_number, "", ""]),
+    ];
+  }
+
+  const body = "﻿" + toCsv(rows) + "\n";
   return new NextResponse(body, {
     status: 200,
     headers: {

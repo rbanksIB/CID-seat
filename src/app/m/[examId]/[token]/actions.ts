@@ -301,18 +301,24 @@ export async function uploadGradesCsvByTokenAction(
   if (rows.length === 0) throw new Error("CSV is empty");
 
   const first = rows[0].map((s) => s.trim().toLowerCase());
-  const hasHeader = first.some((c) => /seat|grade|comment/i.test(c));
+  const hasHeader = first.some((c) => /seat|grade|comment|mark/i.test(c));
   let seatIdx = 0;
   let gradeIdx = 1;
   let commentIdx = 2;
   let start = 0;
   if (hasHeader) {
     start = 1;
-    const findIdx = (patterns: RegExp[]) =>
-      first.findIndex((c) => patterns.some((p) => p.test(c)));
-    const s = findIdx([/seat/i]);
-    const g = findIdx([/^grade\b/i, /^mark\b/i]);
-    const c = findIdx([/^comment/i]);
+    // Skip columns clearly belonging to the OTHER role so a reference
+    // column like "Primary Marker's grade" in a secondary marker's
+    // template doesn't get read back as the secondary's own grade.
+    const otherRole = isPrimary ? /second/i : /primary/i;
+    const isOther = (c: string) => otherRole.test(c);
+    const s = first.findIndex((c) => /seat/i.test(c) && !isOther(c));
+    const g = first.findIndex(
+      (c) =>
+        /(grade|mark)/i.test(c) && !/comment/i.test(c) && !isOther(c),
+    );
+    const c = first.findIndex((c) => /comment/i.test(c) && !isOther(c));
     if (s >= 0) seatIdx = s;
     if (g >= 0) gradeIdx = g;
     if (c >= 0) commentIdx = c;
