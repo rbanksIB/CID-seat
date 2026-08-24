@@ -7,5 +7,8 @@ export const GRADE_REGEX_SOURCE = "^\\d+(\\.\\d)?$";
 export const GRADE_REGEX = new RegExp(GRADE_REGEX_SOURCE);
 
 export function isValidGrade(s: string): boolean {
-  return s === "" || GRADE_REGEX.test(s);
+  if (s === "") return true;
+  if (!GRADE_REGEX.test(s)) return false;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 && n <= 100;
 }

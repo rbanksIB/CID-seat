@@ -551,7 +551,7 @@ export default async function AdminExamPage({
                           name="mcq_score"
                           pattern="^\d+(\.\d{1,2})?$"
                           inputMode="decimal"
-                          title="Number with up to 2 decimal places"
+                          title="Number between 0 and 100 with up to 2 decimal places"
                         />
                       )}
                     </td>

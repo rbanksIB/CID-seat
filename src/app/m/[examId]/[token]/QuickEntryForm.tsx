@@ -51,7 +51,7 @@ export function QuickEntryForm({
           required
           pattern="^\d+(\.\d)?$"
           inputMode="decimal"
-          title="A number with at most one decimal place, e.g. 70 or 70.5"
+          title="A number between 0 and 100 with at most one decimal place, e.g. 70 or 70.5"
           className="w-32 rounded border px-3 py-2 text-sm"
         />
         <input

@@ -298,6 +298,13 @@ export async function adminOverrideGradeAction(
       "Grade must be a number with up to 2 decimal places",
     );
   }
+  // Grade fields (not MCQ) are constrained to the 0-100 range.
+  if (raw !== "" && field !== "mcq_score") {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > 100) {
+      throw new Error("Grade must be between 0 and 100");
+    }
+  }
   const value = raw === "" ? null : raw;
   const note = `Grade (${field}) was changed by Admin user ${
     acting?.name ?? "unknown"

@@ -148,7 +148,7 @@ export function GradeTable({
       const v = (values[id] ?? "").trim();
       if (!isValidGrade(v)) {
         setError(
-          `Grade "${v}" must be a number with at most one decimal place`,
+          `Grade "${v}" must be a number between 0 and 100 with at most one decimal place`,
         );
         return;
       }
@@ -395,7 +395,7 @@ export function GradeTable({
                       placeholder="—"
                       pattern={GRADE_REGEX_SOURCE}
                       inputMode="decimal"
-                      title="Number with at most one decimal place"
+                      title="Number between 0 and 100 with at most one decimal place"
                       className={`w-24 rounded border px-2 py-1 text-sm ${dirty ? "border-blue-400 bg-blue-50" : ""}`}
                     />
                   ) : (
