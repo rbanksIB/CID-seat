@@ -26,10 +26,10 @@ export async function GET(
       )
     : [];
 
-  const header: string[] = ["CID", "Seat number", "MCQ score"];
+  const header: string[] = ["Seat number", "CID", "MCQ score"];
   const rows: string[][] = [
     header,
-    ...seats.map((s) => [s.cid, s.seat_number, ""]),
+    ...seats.map((s) => [s.seat_number, s.cid, ""]),
   ];
   const body = toCsv(rows) + "\n";
   const safe = (exam?.code || exam?.name || "mcq")
