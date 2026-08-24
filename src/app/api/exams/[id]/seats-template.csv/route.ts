@@ -16,7 +16,7 @@ export async function GET(
       ])
     : null;
 
-  const body = toCsv([["CID", "Seat number"]]) + "\n";
+  const body = toCsv([["Seat number", "CID"]]) + "\n";
   const safe = (exam?.code || exam?.name || "seats")
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);
