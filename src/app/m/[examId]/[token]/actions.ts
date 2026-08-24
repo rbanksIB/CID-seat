@@ -683,3 +683,51 @@ export async function setGradeBySeatByTokenActionState(
     return toErrorState(e);
   }
 }
+
+// State-returning wrappers around the three "Submit marks" completion
+// actions. Server-side validation throws (e.g. "N sampled seats have
+// a grade that differs from the primary marker's but no comment...")
+// are caught here so the marker page can render a friendly inline
+// message instead of Next.js's default "Server Components render"
+// error box.
+export async function completePrimaryMarkingByTokenActionState(
+  examId: number,
+  token: string,
+  _prev: SaveState,
+  _formData: FormData,
+): Promise<SaveState> {
+  try {
+    await completePrimaryMarkingByTokenAction(examId, token);
+    return { ok: true, error: null };
+  } catch (e) {
+    return toErrorState(e);
+  }
+}
+
+export async function completeSecondaryMarkingByTokenActionState(
+  examId: number,
+  token: string,
+  _prev: SaveState,
+  _formData: FormData,
+): Promise<SaveState> {
+  try {
+    await completeSecondaryMarkingByTokenAction(examId, token);
+    return { ok: true, error: null };
+  } catch (e) {
+    return toErrorState(e);
+  }
+}
+
+export async function completeFinalMarkingByTokenActionState(
+  examId: number,
+  token: string,
+  _prev: SaveState,
+  _formData: FormData,
+): Promise<SaveState> {
+  try {
+    await completeFinalMarkingByTokenAction(examId, token);
+    return { ok: true, error: null };
+  } catch (e) {
+    return toErrorState(e);
+  }
+}

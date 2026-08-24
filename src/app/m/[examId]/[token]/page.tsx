@@ -9,14 +9,14 @@ import {
 import { sweepDeadlineStatuses } from "@/lib/deadlines";
 import { formatDateOnly } from "@/lib/datetime";
 import {
-  completeFinalMarkingByTokenAction,
-  completePrimaryMarkingByTokenAction,
-  completeSecondaryMarkingByTokenAction,
+  completeFinalMarkingByTokenActionState,
+  completePrimaryMarkingByTokenActionState,
+  completeSecondaryMarkingByTokenActionState,
 } from "./actions";
+import { CompleteMarkingButton } from "./CompleteMarkingButton";
 import { GradeTable, type GradeRow } from "./GradeTable";
 import { MarkerUploadPanel } from "./MarkerUploadPanel";
 import { QuickEntryForm } from "./QuickEntryForm";
-import { SubmitButton } from "@/components/SubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -305,54 +305,48 @@ export default async function MarkerByTokenPage({
       {markingOpen && (
         <section className="rounded-lg border bg-white p-6 shadow-sm">
           {isResolving ? (
-            <form
-              action={async () => {
-                "use server";
-                await completeFinalMarkingByTokenAction(examId, token);
-              }}
+            <CompleteMarkingButton
+              action={completeFinalMarkingByTokenActionState.bind(
+                null,
+                examId,
+                token,
+              )}
+              label="Submit final marks"
+              disabled={!canComplete}
+              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              <SubmitButton
-                label="Submit final marks"
-                disabled={!canComplete}
-                scrollToTop
-                className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              />
               <p className="mt-2 text-xs text-slate-500">
                 Marks all discrepancies as resolved and returns the exam to
                 Ready for Canvas upload.
               </p>
-            </form>
+            </CompleteMarkingButton>
           ) : isPrimary ? (
-            <form
-              action={async () => {
-                "use server";
-                await completePrimaryMarkingByTokenAction(examId, token);
-              }}
+            <CompleteMarkingButton
+              action={completePrimaryMarkingByTokenActionState.bind(
+                null,
+                examId,
+                token,
+              )}
+              label="Submit marks"
+              disabled={!canComplete}
+              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              <SubmitButton
-                label="Submit marks"
-                disabled={!canComplete}
-                scrollToTop
-                className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              />
               <p className="mt-2 text-xs text-slate-500">
                 Locks in your grades and hands over to the admin to review the
                 second-marking sample before the second marker is notified.
               </p>
-            </form>
+            </CompleteMarkingButton>
           ) : (
-            <form
-              action={async () => {
-                "use server";
-                await completeSecondaryMarkingByTokenAction(examId, token);
-              }}
+            <CompleteMarkingButton
+              action={completeSecondaryMarkingByTokenActionState.bind(
+                null,
+                examId,
+                token,
+              )}
+              label="Submit marks"
+              disabled={!canComplete}
+              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              <SubmitButton
-                label="Submit marks"
-                disabled={!canComplete}
-                scrollToTop
-                className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              />
               {secondaryMismatchesMissingComment > 0 && (
                 <p className="mt-2 text-xs text-red-700">
                   {secondaryMismatchesMissingComment} sampled seat
@@ -366,7 +360,7 @@ export default async function MarkerByTokenPage({
                 Locks in your grades. The primary marker will be asked to
                 resolve any discrepancies.
               </p>
-            </form>
+            </CompleteMarkingButton>
           )}
         </section>
       )}
