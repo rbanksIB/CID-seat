@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getActingAdmin, getAllAdmins } from "@/lib/actor";
+import type { Admin } from "@/lib/db";
+import { authEnforced } from "@/lib/easyAuth";
 import { ActingAsPicker } from "./admin/ActingAsPicker";
 
 // Shared header + main container used by both /admin and /exams routes.
@@ -9,10 +11,7 @@ export default async function AdminChrome({
 }: {
   children: React.ReactNode;
 }) {
-  const [current, admins] = await Promise.all([
-    getActingAdmin(),
-    getAllAdmins(),
-  ]);
+  const current = await getActingAdmin();
 
   return (
     <>
@@ -53,14 +52,42 @@ export default async function AdminChrome({
             >
               Email log
             </Link>
-            <ActingAsPicker
-              admins={admins.map((a) => ({ id: a.id, name: a.name }))}
-              currentId={current?.id ?? null}
-            />
+            <Identity current={current} />
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-6 py-8">
+        {authEnforced() && !current ? <NotAuthorised /> : children}
+      </main>
     </>
+  );
+}
+
+// Signed-in name once Easy Auth is enforcing, the acting-as picker before
+// then. The admin list is only needed by the picker.
+async function Identity({ current }: { current: Admin | null }) {
+  if (authEnforced()) {
+    if (!current) return null;
+    return <span className="text-xs text-slate-500">{current.name}</span>;
+  }
+
+  const admins = await getAllAdmins();
+  return (
+    <ActingAsPicker
+      admins={admins.map((a) => ({ id: a.id, name: a.name }))}
+      currentId={current?.id ?? null}
+    />
+  );
+}
+
+function NotAuthorised() {
+  return (
+    <div className="rounded border border-amber-300 bg-amber-50 p-6">
+      <h1 className="text-lg font-semibold">Not authorised</h1>
+      <p className="mt-2 text-sm text-slate-700">
+        You are signed in, but your account is not on the EMMA admin list. Ask
+        an existing admin to add you.
+      </p>
+    </div>
   );
 }
