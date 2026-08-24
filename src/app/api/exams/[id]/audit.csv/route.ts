@@ -116,7 +116,7 @@ export async function GET(
     ]);
   }
 
-  const body = toCsv(rows) + "\n";
+  const body = "﻿" + toCsv(rows) + "\n";
   const safeName = (exam.code || exam.name)
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);

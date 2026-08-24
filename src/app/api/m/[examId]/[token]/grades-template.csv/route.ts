@@ -46,7 +46,7 @@ export async function GET(
     ["Seat number", "Grade", "Comments"],
     ...seats.map((s) => [s.seat_number, "", ""]),
   ];
-  const body = toCsv(rows) + "\n";
+  const body = "﻿" + toCsv(rows) + "\n";
   const safe = (exam.code || exam.name || "grades")
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);

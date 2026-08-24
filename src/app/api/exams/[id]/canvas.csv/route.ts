@@ -60,7 +60,11 @@ export async function GET(
     rows.push(["", "", s.cid, "", "", gradeForCanvas]);
   }
 
-  const body = toCsv(rows) + "\n";
+  // Prepend a UTF-8 BOM so Excel opens the file with the correct
+  // encoding — without it, Excel decodes bytes as the local codepage
+  // and characters like the em-dash render as garbled sequences
+  // (e.g. "‚Äî").
+  const body = "﻿" + toCsv(rows) + "\n";
   const safeName = (exam.code || exam.name)
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);

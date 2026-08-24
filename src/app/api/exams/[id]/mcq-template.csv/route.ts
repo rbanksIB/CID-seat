@@ -31,7 +31,7 @@ export async function GET(
     header,
     ...seats.map((s) => [s.seat_number, s.cid, ""]),
   ];
-  const body = toCsv(rows) + "\n";
+  const body = "﻿" + toCsv(rows) + "\n";
   const safe = (exam?.code || exam?.name || "mcq")
     .replace(/[^a-z0-9\-_]+/gi, "_")
     .slice(0, 60);
