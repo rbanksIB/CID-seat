@@ -406,7 +406,7 @@ export function GradeTable({
                   {r.absent ? (
                     <span className="text-slate-400">n/a</span>
                   ) : markingOpen ? (
-                    <input
+                    <textarea
                       value={comment}
                       onChange={(e) =>
                         setComments((p) => ({ ...p, [r.id]: e.target.value }))
@@ -417,7 +417,9 @@ export function GradeTable({
                           ? "Your grade differs from the primary marker's — a comment is required."
                           : undefined
                       }
-                      className={`w-full min-w-32 rounded border px-2 py-1 text-sm ${
+                      maxLength={250}
+                      rows={2}
+                      className={`block w-full min-w-[16rem] resize-y rounded border px-2 py-1 text-sm leading-snug ${
                         commentMissing
                           ? "border-red-400 bg-red-50"
                           : dirty
@@ -426,7 +428,9 @@ export function GradeTable({
                       }`}
                     />
                   ) : (
-                    <span className="text-slate-700">{comment || "—"}</span>
+                    <span className="block whitespace-pre-wrap break-words text-slate-700">
+                      {comment || "—"}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-2 text-xs text-slate-600">
