@@ -38,14 +38,13 @@ export async function GET(
     [examId],
   );
 
-  const assignmentColumn = exam.code ? `${exam.code} — ${exam.name}` : exam.name;
   const header = [
     "Student",
     "ID",
     "SIS User ID",
     "SIS Login ID",
     "Section",
-    assignmentColumn,
+    exam.name,
   ];
   const rows: (string | number | null)[][] = [header];
   for (const s of submissions) {
