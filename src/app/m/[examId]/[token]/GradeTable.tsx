@@ -212,10 +212,11 @@ export function GradeTable({
 
   const showPrimary = isSecondary || isResolving;
   const showSecondary = isResolving;
-  // Secondary marker sees the MCQ column right after Seat (so they can
-  // read it before the primary's grade); every other view keeps MCQ
-  // between the primary/secondary columns and the marker's own grade.
-  const mcqBeforePrimary = mcqEnabled && isSecondary && !isResolving;
+  // Views that show a primary_grade column put MCQ right after Seat
+  // (so the reader can weigh the MCQ before looking at the other
+  // marker's grade). Primary-marker default view has no primary_grade
+  // column, so MCQ sits next to the marker's own grade instead.
+  const mcqBeforePrimary = mcqEnabled && (isSecondary || isResolving);
   const mcqAfterPrimary = mcqEnabled && !mcqBeforePrimary;
   const yourLabel = isResolving
     ? "Final grade"
