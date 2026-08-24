@@ -7,35 +7,29 @@ import { query, queryOne, type Admin } from "@/lib/db";
 const COOKIE = "emma_actor_id";
 
 // Reads the acting admin from the cookie. Touches last_access_at when
-// found so the Admin users table shows recent activity. Falls back to
-// the first admin if the cookie is missing / stale.
+// found so the Admin users table shows recent activity. Returns null
+// when the cookie is missing or points to a deleted admin — never
+// falls back to "first admin", because marker requests to /m/ URLs
+// also arrive without this cookie and would otherwise be silently
+// stamped as an admin override on every save.
 export async function getActingAdmin(): Promise<Admin | null> {
   const jar = await cookies();
   const raw = jar.get(COOKIE)?.value;
   const id = raw ? Number(raw) : NaN;
+  if (!Number.isFinite(id)) return null;
 
-  if (Number.isFinite(id)) {
-    const found = await queryOne<Admin>(
-      "SELECT * FROM admins WHERE id = $1",
-      [id],
-    );
-    if (found) {
-      // Fire and forget; don't hold up the page render.
-      query(
-        "UPDATE admins SET last_access_at = now() WHERE id = $1",
-        [found.id],
-      ).catch(() => {});
-      return found;
-    }
-  }
-
-  // Fallback to the first admin so the header dropdown always renders
-  // something sensible on first visit.
-  return (
-    (await queryOne<Admin>(
-      "SELECT * FROM admins ORDER BY id LIMIT 1",
-    )) ?? null
+  const found = await queryOne<Admin>(
+    "SELECT * FROM admins WHERE id = $1",
+    [id],
   );
+  if (!found) return null;
+
+  // Fire and forget; don't hold up the page render.
+  query(
+    "UPDATE admins SET last_access_at = now() WHERE id = $1",
+    [found.id],
+  ).catch(() => {});
+  return found;
 }
 
 export async function getAllAdmins(): Promise<Admin[]> {
