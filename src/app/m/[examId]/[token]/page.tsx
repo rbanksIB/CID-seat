@@ -128,9 +128,9 @@ export default async function MarkerByTokenPage({
           },
   );
 
-  // If an admin is acting (cookie-based identity), they can edit grades on
-  // the marker page regardless of the exam phase. Their saves are logged
-  // as overrides via the same route.
+  // If an admin is signed in, they can edit grades on the marker page
+  // regardless of the exam phase. Their saves are logged as overrides via
+  // the same route.
   const { getActingAdmin } = await import("@/lib/actor");
   const actingAdmin = await getActingAdmin();
   const isAdminOverride = actingAdmin != null;

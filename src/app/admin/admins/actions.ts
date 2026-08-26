@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne, type Admin } from "@/lib/db";
+import { requireAdmin } from "@/lib/actor";
 
 function parseEmail(v: FormDataEntryValue | null): string {
   const s = String(v ?? "").trim().toLowerCase();
@@ -12,6 +13,7 @@ function parseEmail(v: FormDataEntryValue | null): string {
 }
 
 export async function createAdminAction(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const email = parseEmail(formData.get("email"));
   if (!name) throw new Error("Name is required");
@@ -30,6 +32,7 @@ export async function createAdminAction(formData: FormData) {
 }
 
 export async function updateAdminAction(id: number, formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const email = parseEmail(formData.get("email"));
   if (!name) throw new Error("Name is required");
@@ -49,6 +52,7 @@ export async function updateAdminAction(id: number, formData: FormData) {
 }
 
 export async function deleteAdminAction(id: number, formData: FormData) {
+  await requireAdmin();
   const admin = await queryOne<Admin>(
     "SELECT * FROM admins WHERE id = $1",
     [id],

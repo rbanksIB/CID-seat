@@ -49,8 +49,8 @@ export async function saveGradesByTokenAction(
   const { exam, role } = await authorize(examId, token);
   const isPrimary = role === "primary";
 
-  // If an admin identity cookie is present, treat this as an override
-  // save: bypass phase gating and stamp an override note on each row.
+  // If an admin is signed in, treat this as an override save: bypass
+  // phase gating and stamp an override note on each row.
   const { getActingAdmin } = await import("@/lib/actor");
   const actingAdmin = await getActingAdmin();
   const isAdminOverride = actingAdmin != null;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminAllowed } from "@/lib/actor";
 import { queryOne, type Exam } from "@/lib/db";
 import { toCsv } from "@/lib/csv";
 
@@ -8,6 +9,10 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!(await adminAllowed())) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   const { id } = await params;
   const examId = Number(id);
   const exam = Number.isFinite(examId)

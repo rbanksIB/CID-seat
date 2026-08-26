@@ -13,6 +13,7 @@ import {
   recordEmail,
 } from "@/lib/deadlines";
 import { type SaveState, toErrorState } from "@/lib/actionState";
+import { requireAdmin } from "@/lib/actor";
 
 async function getOrigin(): Promise<string> {
   const h = await headers();
@@ -60,6 +61,7 @@ function parseSamplingMode(v: FormDataEntryValue | null): "standard" | "full" {
 }
 
 export async function createExamAction(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim() || null;
   const moduleName =
@@ -156,6 +158,7 @@ export async function createExamAction(formData: FormData) {
 }
 
 export async function resetSeatsAction(examId: number) {
+  await requireAdmin();
   const exam = await queryOne<Exam>(
     "SELECT status FROM exams WHERE id = $1",
     [examId],
@@ -175,6 +178,7 @@ export async function setMcqScoreAction(
   submissionId: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const raw = String(formData.get("mcq_score") ?? "").trim();
   if (raw !== "" && !/^\d+(\.\d{1,2})?$/.test(raw)) {
     throw new Error(
@@ -192,6 +196,7 @@ export async function uploadMcqCsvAction(
   examId: number,
   formData: FormData,
 ): Promise<{ saved: number; skipped: string[] }> {
+  await requireAdmin();
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     throw new Error("No file uploaded");
@@ -258,6 +263,7 @@ export async function updateMcqWeightingAction(
   examId: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const raw = String(formData.get("mcq_weighting") ?? "").trim();
   if (raw === "") {
     await query(
@@ -290,6 +296,7 @@ export async function adminOverrideGradeAction(
   field: "grade" | "secondary_grade" | "final_grade" | "mcq_score",
   formData: FormData,
 ) {
+  await requireAdmin();
   const { getActingAdmin } = await import("@/lib/actor");
   const acting = await getActingAdmin();
   const raw = String(formData.get("value") ?? "").trim();
@@ -331,6 +338,7 @@ export async function toggleAbsentAction(
   examId: number,
   submissionId: number,
 ) {
+  await requireAdmin();
   const exam = await queryOne<Exam>(
     "SELECT status FROM exams WHERE id = $1",
     [examId],
@@ -360,6 +368,7 @@ export async function updatePrimaryDeadlineAction(
   examId: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const deadline = parseFutureDeadline(
     formData.get("primary_deadline"),
     "Primary marker deadline",
@@ -386,6 +395,7 @@ export async function updateSecondaryDeadlineAction(
   examId: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const deadline = parseFutureDeadline(
     formData.get("secondary_deadline"),
     "Second marker deadline",
@@ -411,6 +421,7 @@ export async function reassignMarkerAction(
   role: "primary" | "secondary",
   formData: FormData,
 ) {
+  await requireAdmin();
   const email = parseEmail(formData.get("email"));
   const name = String(formData.get("name") ?? "").trim() || null;
 
@@ -439,6 +450,7 @@ export async function reassignMarkerAction(
 }
 
 export async function uploadSeatsAction(examId: number, formData: FormData) {
+  await requireAdmin();
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     throw new Error("No file uploaded");
@@ -501,6 +513,7 @@ export async function uploadSeatsAction(examId: number, formData: FormData) {
 }
 
 export async function addSeatAction(examId: number, formData: FormData) {
+  await requireAdmin();
   const seat = String(formData.get("seat") ?? "").trim();
   const cid = String(formData.get("cid") ?? "").trim();
   if (!seat || !cid) {
@@ -542,6 +555,7 @@ export async function addSeatActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await addSeatAction(examId, formData);
     return { ok: true, error: null };
@@ -551,6 +565,7 @@ export async function addSeatActionState(
 }
 
 export async function deleteSeatAction(examId: number, submissionId: number) {
+  await requireAdmin();
   await query("DELETE FROM submissions WHERE id = $1 AND exam_id = $2", [
     submissionId,
     examId,
@@ -559,6 +574,7 @@ export async function deleteSeatAction(examId: number, submissionId: number) {
 }
 
 export async function deleteExamAction(examId: number, formData: FormData) {
+  await requireAdmin();
   const exam = await queryOne<Exam>("SELECT name FROM exams WHERE id = $1", [
     examId,
   ]);
@@ -574,6 +590,7 @@ export async function deleteExamAction(examId: number, formData: FormData) {
 }
 
 export async function startPrimaryMarkingAction(examId: number) {
+  await requireAdmin();
   const exam = await queryOne<Exam>("SELECT * FROM exams WHERE id = $1", [
     examId,
   ]);
@@ -641,6 +658,7 @@ export async function toggleInSampleAction(
   examId: number,
   submissionId: number,
 ) {
+  await requireAdmin();
   const exam = await queryOne<Exam>("SELECT status FROM exams WHERE id = $1", [
     examId,
   ]);
@@ -661,6 +679,7 @@ export async function startSecondaryMarkingAction(
   examId: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const exam = await queryOne<Exam>("SELECT * FROM exams WHERE id = $1", [
     examId,
   ]);
@@ -726,6 +745,7 @@ export async function regenerateMarkerTokenAction(
   examId: number,
   role: "primary" | "secondary",
 ) {
+  await requireAdmin();
   const column =
     role === "primary" ? "primary_access_token" : "secondary_access_token";
   await query(`UPDATE exams SET ${column} = $1 WHERE id = $2`, [
@@ -746,6 +766,7 @@ export async function adminOverrideGradeActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await adminOverrideGradeAction(examId, submissionId, field, formData);
     return { ok: true, error: null };
@@ -760,6 +781,7 @@ export async function setMcqScoreActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await setMcqScoreAction(examId, submissionId, formData);
     return { ok: true, error: null };
@@ -773,6 +795,7 @@ export async function uploadSeatsActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await uploadSeatsAction(examId, formData);
     return { ok: true, error: null };
@@ -786,6 +809,7 @@ export async function updatePrimaryDeadlineActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await updatePrimaryDeadlineAction(examId, formData);
     return { ok: true, error: null };
@@ -799,6 +823,7 @@ export async function updateSecondaryDeadlineActionState(
   _prev: SaveState,
   formData: FormData,
 ): Promise<SaveState> {
+  await requireAdmin();
   try {
     await updateSecondaryDeadlineAction(examId, formData);
     return { ok: true, error: null };

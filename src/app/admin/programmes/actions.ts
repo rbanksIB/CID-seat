@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne, type Programme, PROGRAMME_LEVELS } from "@/lib/db";
+import { requireAdmin } from "@/lib/actor";
 
 function parseLevel(v: FormDataEntryValue | null): "MSc" | "MBA" | "BSc" {
   const s = String(v ?? "").trim();
@@ -12,6 +13,7 @@ function parseLevel(v: FormDataEntryValue | null): "MSc" | "MBA" | "BSc" {
 }
 
 export async function createProgrammeAction(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const programmeId = String(formData.get("programme_id") ?? "").trim();
   const level = parseLevel(formData.get("level"));
@@ -39,6 +41,7 @@ export async function updateProgrammeAction(
   id: number,
   formData: FormData,
 ) {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const programmeId = String(formData.get("programme_id") ?? "").trim();
   const level = parseLevel(formData.get("level"));
@@ -63,6 +66,7 @@ export async function updateProgrammeAction(
 }
 
 export async function deleteProgrammeAction(id: number, formData: FormData) {
+  await requireAdmin();
   const prog = await queryOne<Programme>(
     "SELECT * FROM programmes WHERE id = $1",
     [id],
