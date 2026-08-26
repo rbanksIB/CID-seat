@@ -3,7 +3,11 @@
 
 import { cookies, headers } from "next/headers";
 import { query, queryOne, type Admin } from "@/lib/db";
-import { PRINCIPAL_HEADER, authEnforced } from "@/lib/easyAuth";
+import {
+  PRINCIPAL_CLAIMS_HEADER,
+  PRINCIPAL_HEADER,
+  authEnforced,
+} from "@/lib/easyAuth";
 
 const COOKIE = "emma_actor_id";
 
@@ -51,27 +55,60 @@ async function fromCookie(): Promise<Admin | null> {
 }
 
 async function fromSignIn(): Promise<Admin | null> {
-  const email = await signedInEmail();
-  if (!email) return null;
+  const candidates = await signedInEmails();
+  if (candidates.length === 0) return null;
 
   const found = await queryOne<Admin>(
-    "SELECT * FROM admins WHERE lower(email) = $1",
-    [email],
+    "SELECT * FROM admins WHERE lower(email) = ANY($1::text[])",
+    [candidates],
   );
   return found ?? null;
 }
 
+// Claim types that can carry an address. A UPN and a mail address are often
+// different strings, so match the admins table against any of them. Only
+// safe while the registration is single-tenant.
+// TODO: key on the immutable oid claim instead.
+const EMAIL_CLAIMS = new Set([
+  "email",
+  "preferred_username",
+  "upn",
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
+]);
+
 // Off Azure there is no Easy Auth in front of the app, so local development
 // falls back to EMMA_DEV_ADMIN_EMAIL. The NODE_ENV check is a hard gate: in
 // production a missing header must never resolve to an identity.
-async function signedInEmail(): Promise<string | null> {
-  const email = (await headers()).get(PRINCIPAL_HEADER)?.trim();
-  if (email) return email.toLowerCase();
+async function signedInEmails(): Promise<string[]> {
+  const h = await headers();
+  const found = new Set<string>();
 
-  if (process.env.NODE_ENV !== "production") {
-    return process.env.EMMA_DEV_ADMIN_EMAIL?.trim().toLowerCase() ?? null;
+  for (const claim of decodeClaims(h.get(PRINCIPAL_CLAIMS_HEADER))) {
+    if (EMAIL_CLAIMS.has(claim.typ) && claim.val.includes("@")) {
+      found.add(claim.val.trim().toLowerCase());
+    }
   }
-  return null;
+
+  const name = h.get(PRINCIPAL_HEADER)?.trim();
+  if (name?.includes("@")) found.add(name.toLowerCase());
+
+  if (found.size === 0 && process.env.NODE_ENV !== "production") {
+    const dev = process.env.EMMA_DEV_ADMIN_EMAIL?.trim().toLowerCase();
+    if (dev) found.add(dev);
+  }
+
+  return [...found];
+}
+
+function decodeClaims(encoded: string | null): { typ: string; val: string }[] {
+  if (!encoded) return [];
+  try {
+    const parsed = JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+    return Array.isArray(parsed?.claims) ? parsed.claims : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getAllAdmins(): Promise<Admin[]> {
