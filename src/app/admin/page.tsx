@@ -145,7 +145,7 @@ export default async function AdminDashboard() {
           </p>
           <h1 className="mt-1 text-2xl font-bold">Dashboard</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Quick view of what needs attention.
+            Anonymous exam script marking.
           </p>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
